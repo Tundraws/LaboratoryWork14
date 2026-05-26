@@ -5,6 +5,7 @@ import asyncio
 
 from metro_analytics.api.app import _build_state
 from metro_analytics.core.settings import Settings
+from metro_analytics.services.visualization import PlotlyVisualizer
 
 
 async def run_once(settings: Settings) -> None:
@@ -12,7 +13,10 @@ async def run_once(settings: Settings) -> None:
     state = _build_state(settings)
     records = await state.arrow_client.fetch()
     metrics = state.analytics.ingest(records)
+    plots = PlotlyVisualizer("data/plots").render(records)
     print(f"Импортировано записей: {metrics['records']} за {metrics['elapsed_ms']} мс")
+    for plot in plots:
+        print(f"График сохранён: {plot}")
     for row in state.analytics.summarize():
         print(
             f"{row.station_id} ({row.line}): входы={row.total_entries}, "
@@ -41,4 +45,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

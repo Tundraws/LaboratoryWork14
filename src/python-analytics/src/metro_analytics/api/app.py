@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
 from fastapi import Depends, FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.responses import HTMLResponse
 
 from metro_analytics.api.dependencies import AppState, DashboardBuffer
 from metro_analytics.core.settings import Settings
@@ -36,6 +37,50 @@ def create_app(settings: Settings | None = None, state: AppState | None = None) 
     @app.get("/healthz")
     async def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @app.get("/", response_class=HTMLResponse)
+    async def dashboard_page() -> str:
+        return """
+        <!doctype html>
+        <html lang="ru">
+        <head>
+          <meta charset="utf-8">
+          <title>Metro Flow</title>
+          <style>
+            body { font-family: system-ui, sans-serif; margin: 24px; color: #17202a; }
+            table { border-collapse: collapse; width: 100%; margin-top: 16px; }
+            th, td { border-bottom: 1px solid #d7dee8; padding: 8px; text-align: left; }
+            .toolbar { display: flex; gap: 8px; align-items: center; }
+          </style>
+        </head>
+        <body>
+          <div class="toolbar">
+            <h1>Пассажиропоток метро</h1>
+            <button id="refresh">Обновить</button>
+          </div>
+          <table>
+            <thead><tr><th>Станция</th><th>Линия</th><th>Входы</th><th>Выходы</th><th>Средний поток</th></tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+          <script>
+            const rows = document.querySelector("#rows");
+            async function render() {
+              const response = await fetch("/dashboard/state");
+              const data = await response.json();
+              rows.innerHTML = data.summaries.map(item => `
+                <tr>
+                  <td>${item.station_id}</td><td>${item.line}</td>
+                  <td>${item.total_entries}</td><td>${item.total_exits}</td>
+                  <td>${item.avg_net_flow.toFixed(2)}</td>
+                </tr>`).join("");
+            }
+            document.querySelector("#refresh").addEventListener("click", render);
+            setInterval(render, 3000);
+            render();
+          </script>
+        </body>
+        </html>
+        """
 
     @app.post("/aggregates/from-arrow")
     async def ingest_from_arrow(container: AppState = Depends(get_state)) -> dict[str, float | int]:
@@ -95,4 +140,3 @@ def _build_state(settings: Settings) -> AppState:
         arrow_client=arrow_client,
         dashboard=DashboardBuffer(limit=settings.dashboard_history_limit),
     )
-
