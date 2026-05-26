@@ -1,5 +1,6 @@
 .env
 .venv/
+.pydeps/
 __pycache__/
 *.py[cod]
 .pytest_cache/
@@ -21,4 +22,3 @@ data/*.jsonl
 data/plots/
 .idea/
 .vscode/
-
