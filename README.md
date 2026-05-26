@@ -23,7 +23,7 @@ Python-сервис получает агрегаты из Arrow или NATS, в
 
 ## Технологии
 
-- Go 1.22: конкурентный сборщик, `context.Context`, graceful shutdown, `slog`, etcd, NATS, Apache Arrow.
+- Go 1.24: конкурентный сборщик, `context.Context`, graceful shutdown, `slog`, etcd, NATS, Apache Arrow.
 - Python 3.11+: FastAPI, Pydantic v2, Polars, DuckDB, PyArrow, Plotly, aiohttp.
 - Rust 2021 + PyO3: библиотека валидации агрегатов.
 - Docker Compose: etcd, NATS, Go collector, Python analytics.
@@ -158,4 +158,3 @@ make test
 - оконная агрегация;
 - API health и импорт из Arrow-клиента через fake dependency;
 - Rust validation success/error cases.
-

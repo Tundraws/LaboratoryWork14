@@ -18,7 +18,8 @@ func TestWindowAggregatorComputesFlowProperties(t *testing.T) {
 	now := time.Now().UTC()
 	events <- model.PassengerEvent{StationID: "central", Line: "red", EventType: "entry", Passengers: 10, Timestamp: now}
 	events <- model.PassengerEvent{StationID: "central", Line: "red", EventType: "exit", Passengers: 3, Timestamp: now}
-	cancel()
+	close(events)
+	defer cancel()
 
 	batch := <-out
 	if len(batch) != 1 {

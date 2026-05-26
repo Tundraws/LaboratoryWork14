@@ -1,6 +1,6 @@
 module github.com/tundraws/laboratorywork14/src/go-collector
 
-go 1.22
+go 1.24
 
 require (
 	github.com/apache/arrow/go/v16 v16.1.0

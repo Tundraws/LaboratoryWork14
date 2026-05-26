@@ -22,7 +22,7 @@ type Config struct {
 
 func Load() (Config, error) {
 	cfg := Config{
-		InstanceID:      readString("COLLECTOR_INSTANCE_ID", "collector-1"),
+		InstanceID:      readString("COLLECTOR_INSTANCE_ID", defaultInstanceID()),
 		TotalShards:     readInt("COLLECTOR_TOTAL_SHARDS", 3),
 		WindowDuration:  time.Duration(readInt("COLLECTOR_WINDOW_SECONDS", 10)) * time.Second,
 		EventsPerSecond: readInt("COLLECTOR_EVENTS_PER_SECOND", 50),
@@ -32,6 +32,14 @@ func Load() (Config, error) {
 		NATSSubject:     readString("COLLECTOR_NATS_SUBJECT", "metro.passenger.windows"),
 	}
 	return cfg, cfg.Validate()
+}
+
+func defaultInstanceID() string {
+	hostname, err := os.Hostname()
+	if err != nil || strings.TrimSpace(hostname) == "" {
+		return "collector-local"
+	}
+	return hostname
 }
 
 func (c Config) Validate() error {

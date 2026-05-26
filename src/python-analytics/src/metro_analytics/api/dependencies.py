@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from metro_analytics.schemas.passenger_flow import WindowAggregate
 from metro_analytics.services.analytics_service import AnalyticsService
 from metro_analytics.services.arrow_client import ArrowAggregateClient
+from metro_analytics.services.nats_consumer import NATSWindowConsumer
 
 
 @dataclass
@@ -25,4 +26,4 @@ class AppState:
     analytics: AnalyticsService
     arrow_client: ArrowAggregateClient
     dashboard: DashboardBuffer
-
+    nats_consumer: NATSWindowConsumer | None = None

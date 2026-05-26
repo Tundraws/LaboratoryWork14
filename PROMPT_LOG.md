@@ -75,6 +75,18 @@
 Проблема: тесты падали с сообщением, что Python interpreter не инициализирован.  
 Как исправлено: добавлен `pyo3::prepare_freethreaded_python()` перед `Python::with_gil`.
 
+### 5. GitHub Actions: Go и Rust jobs падали после push
+
+Что сгенерировал ИИ: CI использовал Go 1.22, хотя локальная проверка выполнялась на Go 1.24; Rust crate включал PyO3 feature `extension-module`, который подходит для сборки расширения, но может ломать обычный `cargo test` на Linux runner.  
+Проблема: GitHub Actions показал падение `ci / go` и `ci / rust`, при этом Python job прошёл.  
+Как исправлено: CI, `go.mod` и Go Dockerfile синхронизированы на Go 1.24; PyO3 переведён на test-friendly feature `auto-initialize`; flaky Go-тест оконной агрегации переписан на детерминированное закрытие входного канала.
+
+### 6. Realtime-поток был реализован, но не подключён к lifecycle API
+
+Что сгенерировал ИИ: `NATSWindowConsumer` и WebSocket endpoint были добавлены отдельными компонентами.  
+Проблема: FastAPI lifespan не запускал NATS consumer автоматически, а HTML dashboard использовал polling вместо WebSocket.  
+Как исправлено: consumer подключён в `lifespan`, ошибки NATS логируются без падения API, dashboard отправляет запрос состояния через WebSocket и откатывается на HTTP polling при недоступном сокете.
+
 ## Проверки
 
 Выполнены локально:
@@ -99,4 +111,5 @@ cargo test
 - Добавлена fallback-валидация Python, чтобы сервис запускался без обязательной сборки Rust extension.
 - Добавлен dashboard HTML endpoint, а не только JSON API.
 - Добавлены CI и Kubernetes/HPA assets для проверки повышенной сложности.
-
+- После падения CI исправлены версии toolchain, PyO3 test mode и хрупкий Go-тест.
+- Realtime dashboard теперь использует WebSocket, а Python API запускает NATS consumer при старте.
