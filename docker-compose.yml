@@ -1,0 +1,63 @@
+services:
+  etcd:
+    image: bitnami/etcd:3.5
+    environment:
+      ALLOW_NONE_AUTHENTICATION: "yes"
+      ETCD_ADVERTISE_CLIENT_URLS: http://etcd:2379
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [metro-pipeline]
+    volumes:
+      - etcd-data:/bitnami/etcd
+
+  nats:
+    image: nats:2.10-alpine
+    command: ["-m", "8222"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8222/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [metro-pipeline]
+
+  collector:
+    build:
+      context: ./src/go-collector
+    env_file: .env
+    depends_on:
+      etcd:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    networks: [metro-pipeline]
+
+  analytics:
+    build:
+      context: ./src/python-analytics
+    env_file: .env
+    depends_on:
+      collector:
+        condition: service_started
+      nats:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - analytics-data:/app/data
+    restart: unless-stopped
+    networks: [metro-pipeline]
+
+networks:
+  metro-pipeline:
+    name: metro-pipeline
+
+volumes:
+  etcd-data:
+  analytics-data:
+
